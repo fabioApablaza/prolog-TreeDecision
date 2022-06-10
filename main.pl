@@ -6,6 +6,9 @@
 
 %% csv_read_file('DataSets/wineDatset.csv', Rows, []).
 
+% getSample('./DataSets/wineDatset.csv', 0.8, TrainingSampleWine,TestingSampleWine, HeaderWine).
+% getSample('./DataSets/zooDatset.csv', 0.8, TrainingSampleZoo,TestingSampleZoo, HeaderZoo).
+
 id3(Examples, T, A):-
     t(B, Izq, Der),
     (
