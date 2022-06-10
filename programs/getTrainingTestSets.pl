@@ -1,4 +1,4 @@
-:- module(getSample, [getSample/4]).
+:- module(getSample, [getSample/5]).
 :- use_module(library(csv)).
 
 getHeader([Header| _],Header).
