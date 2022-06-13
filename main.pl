@@ -1,6 +1,9 @@
-%% :- use_module(library(csv)).
+:- use_module("./programs/csvReader.pl",[loadData/3,domain_of_attributes/3]). %getSample(DataSetPath, TrainingSamplePorcentage, TrainingSample,TestingSample, Header)
 
-:- use_module("./programs/getTrainingTestSets.pl",[getSample/5]).
+% We load the data
+main(Domains,Records):-
+    loadData('./DataSets/wineDatset.csv', Attributes, Records), domain_of_attributes(Attributes,Records, Domains).
+
 
 %% tree(N, Nil, Nil).
 %% tree(N, tree(N, M, X), tree(N, M, X)).

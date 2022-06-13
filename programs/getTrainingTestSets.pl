@@ -1,10 +1,6 @@
 :- module(getSample, [getSample/5]).
 :- use_module(library(csv)).
 
-getHeader([Header| _],Header).
-getData([_| Data],Data).
-
-
 getSampleDataAux(TestingSample,0,[],TestingSample).
 
 getSampleDataAux(DataSet,TrainingSampleLen,[RandomMember| RemainingTrainingSample],TestingSample):-
@@ -19,9 +15,9 @@ getSampleData(DataSet,Header,TrainingSampleLen, [Header | TrainingSample ],[Head
 
 getSample(DataSetPath, TrainingSamplePorcentage, TrainingSample,TestingSample, Header):-
     TrainingSamplePorcentage<1, %Validation
-    csv_read_file(DataSetPath, DataSet, []), % We get the dataset
-    getHeader(DataSet,Header),
-    getData(DataSet,Data),
+    csv_read_file(DataSetPath, DataSet), % We get the dataset
+    DataSet= [Header | Data],
+    HeaderNames=..[row | Names], 
     length(Data, DataLength), % Number of records
 
     TrainingSampleLen is round(TrainingSamplePorcentage * DataLength),
