@@ -16,6 +16,7 @@ loadData(CSV_file, Attributes, RecordsAsListOfList):-
 
 % Return all the values for the records in the position Index as a List
 column_unique_values(Index,Records,Values):-
+    %Qye hace nth0?
     maplist(nth0(Index), Records, Values).
 
 
