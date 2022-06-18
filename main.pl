@@ -1,8 +1,18 @@
-:- use_module("./programs/csvReader.pl",[loadData/3,domain_of_attributes/3]). %getSample(DataSetPath, TrainingSamplePorcentage, TrainingSample,TestingSample, Header)
+:- use_module("./programs/csvReader.pl",[loadData/3,domain_of_attributes/3]).
+:- use_module("./programs/dataProcessing.pl",[dropColumn/5,processAndAssertRecords/5,cutElementFromListByIndex/3]). 
 
 % We load the data
-main(Domains,Records):-
-    loadData('./DataSets/wineDatset.csv', Attributes, Records), domain_of_attributes(Attributes,Records, Domains).
+main(Domains,ProccesedAttributes,ProccesedRecords):-
+    loadData('./DataSets/wineDatset.csv', Attributes, Records),
+    
+    dropColumn(Records,Attributes,13,CuttedRecords,CuttedAttributes),
+    domain_of_attributes(CuttedAttributes,CuttedRecords, Domains),
+    %dropColumn(Records,Attributes,12,_,CuttedAttributes),
+    processAndAssertRecords(CuttedRecords,CuttedAttributes,0,ProccesedAttributes,ProccesedRecords),
+    %processAndAssertRecords(Records,Attributes,0,ProccesedAttributes,ProccesedRecords),
+    
+    true.
+
 
 
 %% tree(N, Nil, Nil).

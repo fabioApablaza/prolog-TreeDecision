@@ -1,3 +1,5 @@
+:-module(dataProcessing,[dropColumn/5,processAndAssertRecords/5,cutElementFromListByIndex/3]).
+
 %Get the last element of a list
 getElementByIndex([],_,[]).
 getElementByIndex(List,Index,TargetElement):-
@@ -10,7 +12,14 @@ cutElementFromListByIndex(List,Index,CuttedList):-
 
 dropColumn(Records,Attributes,ColumnIndex,CuttedRecords,CuttedAttributes):-
     cutElementFromListByIndex(Attributes,ColumnIndex,CuttedAttributes),
-    maplist(cutElementFromListByIndex, Records,ColumnIndex,CuttedRecords).
+    length(Records,RecordsLength),
+
+    % We create a list as large of Record list in which each element is equal to ColumnIndex 
+    length(ColumnIndexList,RecordsLength),
+    maplist(=(ColumnIndex),ColumnIndexList),
+    
+    maplist(cutElementFromListByIndex, Records,ColumnIndexList,CuttedRecords),
+    true.
 
 %The last element put an atributes equal to its atribute value
 makeAttributeLegible(Attribute,AttributeValue,Attribute=AttributeValue).
@@ -30,5 +39,6 @@ extractAttributeAsTarget(Records,Attributes,TargetAttributeIndex,ProccesedAttrib
 
 processAndAssertRecords(Records,Attributes,TargetAttributeIndex,ProccesedAttributes,ProccesedRecords):-
     extractAttributeAsTarget(Records,Attributes,TargetAttributeIndex,ProccesedAttributes,ProccesedRecords),
-    maplist(assertz,ProccesedRecords).
+    %maplist(assertz,ProccesedRecords),
+    true.
 
