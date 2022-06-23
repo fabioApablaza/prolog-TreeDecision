@@ -1,4 +1,4 @@
-:-module(dataProcessing,[dropColumn/5,processAndAssertRecords/5,cutElementFromListByIndex/3]).
+:-module(dataProcessing,[dropColumn/5,processAndAssertRecords/5,cutElementFromListByIndex/3,extractAttributeAsTarget/5]).
 
 %Get the last element of a list
 getElementByIndex([],_,[]).
@@ -18,7 +18,7 @@ dropColumn(Records,Attributes,ColumnIndex,CuttedRecords,CuttedAttributes):-
     length(ColumnIndexList,RecordsLength),
     maplist(=(ColumnIndex),ColumnIndexList),
     
-    maplist(cutElementFromListByIndex, Records,ColumnIndexList,CuttedRecords),
+    maplist(cutElementFromListByIndex, Records,ColumnIndexListd,CuttedRecords),
     true.
 
 %The last element put an atributes equal to its atribute value
@@ -39,6 +39,6 @@ extractAttributeAsTarget(Records,Attributes,TargetAttributeIndex,ProccesedAttrib
 
 processAndAssertRecords(Records,Attributes,TargetAttributeIndex,ProccesedAttributes,ProccesedRecords):-
     extractAttributeAsTarget(Records,Attributes,TargetAttributeIndex,ProccesedAttributes,ProccesedRecords),
-    %maplist(assertz,ProccesedRecords),
+    maplist(assertz,ProccesedRecords),
     true.
 
