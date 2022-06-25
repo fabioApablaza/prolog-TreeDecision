@@ -1,5 +1,5 @@
 % Material original https://www.uv.mx/personal/aguerra/files/2020/09/pia-03.pdf ; Sección 3.5.5
-:- module(loadData, [loadData/3,domain_of_attributes/3]).
+:- module(loadData, [loadData/3,domainOfAttributes/3]).
 :- use_module(library(csv)).
 
 getRowAttributesValue(Row,RowArguments):-
@@ -21,11 +21,12 @@ column_unique_values(Index,Records,Values):-
 
 
 %Given a list of records an its arguments, it calculates the domains of each argument.
-domain_of_attributes(Attributes,Records, Domains):-
+domainOfAttributes(Attributes,Records, Domains):-
     findall([Attribute,Domain], ( % Get every attribute and its domain
         member(Attribute, Attributes), % Get an attribute from attributes
         nth0(Index, Attributes, Attribute), % Get the Attribute index in Attributes List
         column_unique_values(Index,Records,DomainAsList),
         list_to_set(DomainAsList, Domain)
-    ), Domains).
+    ), Domains)
+    .
 

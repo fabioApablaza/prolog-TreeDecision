@@ -8,5 +8,5 @@ The targets will be:
 
 TODO:
 * Método que haga drop de columnas
-* Preguntar rangos WINE
+* Preguntar rangos WINE para ver como trabajamos
 * 

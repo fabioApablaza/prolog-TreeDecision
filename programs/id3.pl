@@ -1,11 +1,8 @@
 :- module(id3, [id3/2]).
+:- use_module("./programs/entropy.pl",[entropy/3,conditionedEntropy/3]).
 
-id3(Records,Tree):-
-    % We get unique values of classes
-    setof(Class,(
-        member(Record,Records),
-        Record=processedRecord(_,Class,_)),Classes),
-    induct(Records,root,Classes,[],Tree).
+
+
 
 
 classCount([Class | MoreClasses], Records, [Class/ClassOccurencies| MoreAccounts]):-
@@ -25,22 +22,6 @@ distribution(Records,RecordDistribution):-
 % All records are from the same class
 induct(Records,Parent,_,_,AcNodes,[treeNode(leaf,[Class],Parent)|AcNodes]):-
     distribution(Records,[Class]).
-
-entropy([],_,_,0):-!.
-entropy([Class | Classes], Records, RecordsNum, Sum):-
-    findall(Record,(member(Record,Records), Record=processedRecord(_,Class,_)),RecordsInClass),
-    length(RecordsInClass, ClassOccurrencies),
-    entropy(Classes,Records,RecordNum,SumAux),
-    Probability is ClassOccurrencies/RecordsNum,
-    Sum is SumAux - Probability * log(Probability)/log(2).    
-
-entropy(Records,RecordsNum,Entropy):-
-    %Extract class values from records
-    setof(Class,(
-        member(Record,Records),
-        Record=processedRecord(_,Class,_)),
-    Classes),!,
-    entropy(Classes, Records, RecordsNum,Entropy).
 
 getAttributeValues([],_,Values,Values):-!.
 getAttributeValues([Record | MoreRecords], Attribute, AccValues,Values):-
@@ -66,13 +47,6 @@ getPartitionsByAttribute([AttributeValue|MoreAttributesValues],Records,Attribute
     getPartitionByAttributeValue(Records,Attribute=AttributeValue,Partition),
     getPartitionsByAttribute(MoreAttributesValues,Records,Attribute,MorePartitions).
 
-conditionedEntropy([],_,0):-!.
-conditionedEntropy([Partition | MorePartitions],RecordsLen,ConditionedEntropy):-
-    length(Partition, PartitionLen),
-    entropy(Partition,PartitionLen, PartitionEntropy),
-    conditionedEntropy(MorePartitions,RecordsLen,AcPartitionsEntropy),
-    ConditionedEntropy is AcPartitionsEntropy+ PartitionEntropy.
-
 getMaxInformationGain([X],X):-!.
 getMaxInformationGain([Value/InformationGain | MoreInformationGains],MaxValue/MaxGain):
     getMaxInformationGain(MoreInformationGains, AuxMaxValue/AuxMaxGain),
@@ -86,6 +60,7 @@ eliminateElementFromList(X,[Y|T], [Y|Z]):- eliminateElementFromList(X,T,Z).
 
 
 chooseAttribute(Records,Attributes,Attribute,Values,OtherAttributes):-
+    
     length(Records, RecordsLen),
     entropy(Records,RecordsLen,Entropy),
     findall((Attribute-Values)/InformationGain,(
@@ -111,8 +86,29 @@ particionate([AttributeValue|MoreAttributeValues],Attribute, Records,Parent,Othe
 
 % We must choose which attribute is more relevant to clasificate the given records
 induct(Records, Parent,Attributes,AcNodes,Tree):-
+    write('Inducting'),nl,
     chooseAttribute(Records,Attributes,BestAttribute,BestAttributeValues,OtherAttributes),!,
     particionate(BestAttributeValues,BestAttribute,Records,Parent,OtherAttributes,AcNodes,Tree).
 
 
-%Inconsistent data
+id3(Records,Tree):-
+    % We get unique values of classes
+    setof(Class,(Index,Record,Records,Attributes)^(
+        member(Record,Records),
+        Record=processedRecord(Index,Class,Attributes)),
+    Classes),
+    
+    %length(Records, RecordsLen),
+    %entropy(Records,RecordsLen,Entropy),
+    %write('Entropy: '),write(Entropy),nl.%,
+    
+    induct(Records,root,Classes,[],Tree).
+
+
+
+
+% Get breakpoints
+% Preclassify attributes in numerical and acategorical, order indexes by numerical attributes, in each iteration decide wether the attributes is numerical or categorical, if categorical use what it's already done, if not calculate break points and select the one with better distribution (tip: decide from the middle, option2: calculate the one with best entropy)
+
+%ID3 continous values https://www.youtube.com/watch?v=2vIvM4zmyf4
+% https://www.naun.org/main/NAUN/mcs/17-213.pdf

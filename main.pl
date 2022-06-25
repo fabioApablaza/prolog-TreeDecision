@@ -1,33 +1,31 @@
-:- use_module("./programs/csvReader.pl",[loadData/3,domain_of_attributes/3]).
+
+:- use_module("./programs/id3.pl",[id3/2]).
+:- use_module("./programs/csvReader.pl",[loadData/3,domainOfAttributes/3]).
 :- use_module("./programs/dataProcessing.pl",[dropColumn/5,processAndAssertRecords/5,cutElementFromListByIndex/3]). 
 
+
 % We load the data
-main(Domains,ProccesedAttributes,ProccesedRecords):-
-    loadData('./DataSets/wineDatset.csv', Attributes, Records),
+processZooData(Domains,CuttedAttributes,ProccesedRecords,Tree):-
+    loadData('./DataSets/zooDataset.csv', Attributes, Records),
+    dropColumn(Records,Attributes,0,CuttedRecords,CuttedAttributes),
+    domainOfAttributes(CuttedAttributes,CuttedRecords, Domains),
+    length(CuttedAttributes,CuttedAttributesLen),
+    TargetColumn is CuttedAttributesLen-1,
+    processAndAssertRecords(CuttedRecords,CuttedAttributes,TargetColumn,ProccesedAttributes,ProccesedRecords),
+    %Tree=true.%,
+    id3(ProccesedRecords,Tree).
+
+
+
+main(Domains,ProccesedAttributes,ProccesedRecords,Tree):-
+    loadData('./DataSets/zooDataset.csv', Attributes, Records),
     
-    dropColumn(Records,Attributes,13,CuttedRecords,CuttedAttributes),
-    domain_of_attributes(CuttedAttributes,CuttedRecords, Domains),
-    %dropColumn(Records,Attributes,12,_,CuttedAttributes),
-    processAndAssertRecords(CuttedRecords,CuttedAttributes,0,ProccesedAttributes,ProccesedRecords),
-    %processAndAssertRecords(Records,Attributes,0,ProccesedAttributes,ProccesedRecords),
-    
-    true.
+    %dropColumn(Records,Attributes,13,CuttedRecords,CuttedAttributes),
+    domainOfAttributes(Attributes,Records, Domains),
+    ProccesedRecords=Attributes,
+    ProccesedAttributes=Records,
+    %processAndAssertRecords(CuttedRecords,CuttedAttributes,0,ProccesedAttributes,ProccesedRecords),
+    %id3(CuttedRecords,Tree).
+    Tree=true.
 
 
-
-%% tree(N, Nil, Nil).
-%% tree(N, tree(N, M, X), tree(N, M, X)).
-
-
-%% csv_read_file('DataSets/wineDatset.csv', Rows, []).
-
-%getSample('./DataSets/wineDatset.csv', 0.8, TrainingSampleWine,TestingSampleWine, HeaderWine).
-%getSample('./DataSets/zooDatset.csv', 0.8, TrainingSampleZoo,TestingSampleZoo, HeaderZoo).
-
-%id3(Examples, T, A):-
-%    t(B, Izq, Der),
-%    (
-%    X > 1 ->
-%        writeln('as');
-%        writeln('m')
-%        ).
