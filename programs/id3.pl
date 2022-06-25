@@ -1,9 +1,5 @@
-:- module(id3, [id3/2]).
-:- use_module("./programs/entropy.pl",[entropy/3,conditionedEntropy/3]).
-
-
-
-
+:- module(id3, [id3/3]).
+:- use_module("./programs/entropy.pl",[entropy/3,conditionalEntropy/3]).
 
 classCount([Class | MoreClasses], Records, [Class/ClassOccurencies| MoreAccounts]):-
     %Extract record with the Class we are looking for
@@ -23,15 +19,13 @@ distribution(Records,RecordDistribution):-
 induct(Records,Parent,_,_,AcNodes,[treeNode(leaf,[Class],Parent)|AcNodes]):-
     distribution(Records,[Class]).
 
-getAttributeValues([],_,Values,Values):-!.
-getAttributeValues([Record | MoreRecords], Attribute, AccValues,Values):-
-    Record= processedRecord(_,_,InstanceAttributesValues),
-    member(Attribute=AttributeValue, InstanceAttributesValues),!,
-    (
-        member(AttributeValue, AccValues),!,
-        getAttributeValues(MoreRecords,Attribute, AccValues,Values),
-        getAttributeValues(MoreRecords,Attribute, [AttributeValue | AccValues],Values)
-        ).
+
+getAttributeValues(Records,Attribute,Values):-
+    setof(Value,(Record,Records,Index,Attributes,Class,Attribute)^(
+        member(Record,Records),
+        Record=processedRecord(Index,Class,Attributes),
+        member(Attribute=Value,Attributes)),    
+    Values).
 
 getPartitionByAttributeValue([],_,[]):-!.
 getPartitionByAttributeValue([Record | MoreRecords],AttributeValue,[Record| MoreRecordsForCurrentPartiton]):-
@@ -59,19 +53,20 @@ eliminateElementFromList(X,[X|T], T):-!.
 eliminateElementFromList(X,[Y|T], [Y|Z]):- eliminateElementFromList(X,T,Z).
 
 
-chooseAttribute(Records,Attributes,Attribute,Values,OtherAttributes):-
-    
+chooseAttribute(Records,Classes,Attributes,Attribute,Values,OtherAttributes):-
+    writeln('Attributes: '),writeln(Attributes),nl,
     length(Records, RecordsLen),
     entropy(Records,RecordsLen,Entropy),
-    findall((Attribute-Values)/InformationGain,(
+    findall((Attribute-AttributeValues)/InformationGain,(
         member(Attribute, Attributes),
-        getAttributeValues(Records,Attribute,[],AttributeValues),
+        getAttributeValues(Records,Attribute,AttributeValues),
         getPartitionsByAttribute(AttributeValues,Records,Attribute,Partitions),
-        conditionedEntropy(Partitions,RecordsLen,ConditionedEntropy),
+        conditionalEntropy(Partitions,RecordsLen,ConditionedEntropy),
         InformationGain is Entropy-conditionedEntropy
     ),InformationGains),
-    getMaxInformationGain(InformationGains,(Attribute/Values)/_),
-    eliminateElementFromList(Attribute,Attributes,OtherAttributes).
+    writeln('Information gains: '),writeln(InformationGains),nl.
+    %getMaxInformationGain(InformationGains,(Attribute/Values)/_),
+    %eliminateElementFromList(Attribute,Attributes,OtherAttributes).
 
 
 %induct(Records,Parent,_,_,AcNodes,[treeNode(leaf,[Class],Parent)|AcNodes]):-
@@ -81,28 +76,40 @@ particionate([AttributeValue|MoreAttributeValues],Attribute, Records,Parent,Othe
     length(AcNodes,NewId),
     NewNode=treeNode(NewId,Attribute=AttributeValue,Parent),
     NewAccNodes=[NewNode|AcNodes],
-    induct(Partition,NewNode,OtherAttributes,NewAccNodes,PreTree),!,
+    
+    %To correct
+    induct(Partition,NewNode,[],OtherAttributes,NewAccNodes,PreTree),!,
     particionate(MoreAttributeValues,Attribute,Records,Parent,OtherAttributes,PreTree,Tree).
 
 % We must choose which attribute is more relevant to clasificate the given records
-induct(Records, Parent,Attributes,AcNodes,Tree):-
+induct(Records, Parent,Classes,Attributes,AcNodes,Tree):-
     write('Inducting'),nl,
-    chooseAttribute(Records,Attributes,BestAttribute,BestAttributeValues,OtherAttributes),!,
-    particionate(BestAttributeValues,BestAttribute,Records,Parent,OtherAttributes,AcNodes,Tree).
+    chooseAttribute(Records,Classes,Attributes,BestAttribute,BestAttributeValues,OtherAttributes),!.%,
+    %particionate(BestAttributeValues,BestAttribute,Records,Parent,OtherAttributes,AcNodes,Tree).
 
 
-id3(Records,Tree):-
+id3(Records,ProccesedAttributes,Tree):-
     % We get unique values of classes
     setof(Class,(Index,Record,Records,Attributes)^(
         member(Record,Records),
         Record=processedRecord(Index,Class,Attributes)),
     Classes),
     
-    %length(Records, RecordsLen),
-    %entropy(Records,RecordsLen,Entropy),
-    %write('Entropy: '),write(Entropy),nl.%,
+
+    Tree=true,
+    ProccesedAttributes=[Attribute | _],
+    getAttributeValues(Records, Attribute,AttributeValues),
+
+    length(Records,RecordsLen),
+    getPartitionsByAttribute(AttributeValues,Records,Attribute,Partitions),
+    conditionalEntropy(Partitions,RecordsLen,ConditionalEntropy),
+    entropy(Records,RecordsLen,Entropy),
+    InformationGain is Entropy-ConditionalEntropy,
     
-    induct(Records,root,Classes,[],Tree).
+    write('Entropy: '),write(Entropy),nl,
+    write('Conditional Entropy: '),write(ConditionalEntropy),nl,
+    write('Information gain: '),write(InformationGain),nl.
+    %induct(Records,root,Classes,ProccesedAttributes,[],Tree).
 
 
 

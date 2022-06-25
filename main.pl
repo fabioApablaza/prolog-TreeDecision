@@ -1,11 +1,11 @@
 
-:- use_module("./programs/id3.pl",[id3/2]).
+:- use_module("./programs/id3.pl",[id3/3]).
 :- use_module("./programs/csvReader.pl",[loadData/3,domainOfAttributes/3]).
 :- use_module("./programs/dataProcessing.pl",[dropColumn/5,processAndAssertRecords/5,cutElementFromListByIndex/3]). 
 
 
 % We load the data
-processZooData(Domains,CuttedAttributes,ProccesedRecords,Tree):-
+processZooData(Domains,ProccesedAttributes,ProccesedRecords,Tree):-
     loadData('./DataSets/zooDataset.csv', Attributes, Records),
     dropColumn(Records,Attributes,0,CuttedRecords,CuttedAttributes),
     domainOfAttributes(CuttedAttributes,CuttedRecords, Domains),
@@ -13,7 +13,7 @@ processZooData(Domains,CuttedAttributes,ProccesedRecords,Tree):-
     TargetColumn is CuttedAttributesLen-1,
     processAndAssertRecords(CuttedRecords,CuttedAttributes,TargetColumn,ProccesedAttributes,ProccesedRecords),
     %Tree=true.%,
-    id3(ProccesedRecords,Tree).
+    id3(ProccesedRecords,ProccesedAttributes,Tree).
 
 
 
