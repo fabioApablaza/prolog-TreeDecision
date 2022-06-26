@@ -137,9 +137,9 @@ id3(Records,ProccesedAttributes,Tree):-
     
     induct(Records,root,Classes,ProccesedAttributes,[],Tree),
     printSortedTree(Tree),
-    saveTree(Tree,'myTree.pl'),
-    Records=[ProcessedRecord|_],
-    writeln(ProcessedRecord).
+    saveTree(Tree,'myTree.pl').%,
+    %Records=[ProcessedRecord|_],
+    %writeln(ProcessedRecord).
 
 
 

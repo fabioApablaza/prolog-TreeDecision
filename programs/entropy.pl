@@ -34,10 +34,12 @@ calculateConditionalEntropyTermAux([Class|Classes], Partition,PartitionLen,Recor
     Probability is ClassOccurrencies/PartitionLen,
     calculateConditionalEntropyTermAux(Classes,Partition,PartitionLen,RecordsLen,SumAux),
 
-    (((Probability=1)->(
-        EntropyNumeratorTerm is SumAux - ClassOccurrencies
-        )); 
-    EntropyNumeratorTerm is SumAux - (ClassOccurrencies * log(Probability)/log(2))/RecordsLen).
+    %(((Probability=1)->(
+    %    EntropyNumeratorTerm is SumAux - ClassOccurrencies
+    %    )); 
+    %EntropyNumeratorTerm is SumAux - (ClassOccurrencies * log(Probability)/log(2))/RecordsLen)
+    
+    EntropyNumeratorTerm is SumAux - (ClassOccurrencies * log(Probability)/log(2))/RecordsLen.
 
 %
 

@@ -44,6 +44,39 @@ classifyTrainingRecords([Record | Records],Tree,PredictedClassName,[NewClassifie
 
     classifyTrainingRecords(Records,Tree,PredictedClassName,MoreClassifiedRecords).
 
+
+saveTreeAux(_OutStream,[]):-!.
+saveTreeAux(OutStream,[TreeNode|MoreNodes]):-
+    write(OutStream,TreeNode),write(OutStream,'.'),nl(OutStream),
+    saveTreeAux(OutStream,MoreNodes).
+saveTree(Tree,FileName):-
+    % To read the file we must use consult(FilePath/FileName) and
+    % then use findall(treeNode(NodeIndex,Label,Parent,Action),treeNode(NodeIndex,Label,Parent,Action),Tree)
+    open(FileName,write,OutStream),
+    findall(TreeNode,(
+        member(TreeNode,Tree),
+        write(OutStream,TreeNode),write(OutStream,'.'),nl(OutStream)
+        ),Tree),close(OutStream).
+
+saveResultsAux(_,[]):-!.
+saveResultsAux(OutStream,[Result|MoreResults]):-
+    Result=classifiedRecord(RecordIndex,real_class=RealClass,preddicted_class=PredictedClass),
+    write(OutStream,RecordIndex),write(OutStream,','),write(OutStream,RealClass),write(OutStream,','),
+    write(OutStream,PredictedClass),nl(OutStream),
+
+    write(RecordIndex),write(','),write(RealClass),write(','),write(PredictedClass),nl,
+    saveResultsAux(OutStream,MoreResults).
+
+saveResults(Results,FileName):-
+    open(FileName,write,OutStream),
+
+    %write csv header
+    write(OutStream,'type,'),write(OutStream,'real_class,'),write(OutStream,'predicted_class,'),nl(OutStream),
+    saveResultsAux(OutStream,Results),
+    close(OutStream).
+
+    
+
 testTree(Results,ColumnsToDrop):-
     getTree(Tree),
     loadData('./DataSets/testZoo.csv', Attributes, Records),
@@ -57,7 +90,8 @@ testTree(Results,ColumnsToDrop):-
     TargetColumn is CuttedAttributesLen-1,
     processAndAssertRecords(CuttedRecords,CuttedAttributes,TargetColumn,ProccesedAttributes,ProccesedRecords),
     
-    classifyTrainingRecords(ProccesedRecords,Tree,type,Results),write(Results),nl
+    classifyTrainingRecords(ProccesedRecords,Tree,type,Results),write(Results),nl,
+    saveResults(Results,'results.csv')
     .
 %    true.
 
