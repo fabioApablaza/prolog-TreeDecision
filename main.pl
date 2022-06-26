@@ -4,7 +4,7 @@
 :- use_module("./programs/dataProcessing.pl",[dropColumn/5,processAndAssertRecords/5,cutElementFromListByIndex/3]). 
 
 
-discretizeColumn().
+discretizeAttribute(Attribute,AttributeColumn).
 
 
 % We load the data

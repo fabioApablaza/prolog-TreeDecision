@@ -13,7 +13,7 @@ getPadding(PaddingSeed,Pading):-
 getRootDistance(root,_,0).
 getRootDistance(NodeIndex,TreeNodes,RootDistance):-
     %write('getRootDistance'),
-    Node=treeNode(NodeIndex,_,ParentIndex),
+    Node=treeNode(NodeIndex,_,ParentIndex,_),
     member(Node,TreeNodes),
 
     getRootDistance(ParentIndex,TreeNodes,ParentRootDistance),
@@ -23,13 +23,13 @@ getRootDistance(NodeIndex,TreeNodes,RootDistance):-
 printSortedTreeAux([],_).
 printSortedTreeAux([CurrentNode|MoreNodes],TreeNodes):-
     
-    CurrentNode=treeNode(CurrentNodeIndex,CurrentNodeLabel,_),
+    CurrentNode=treeNode(CurrentNodeIndex,CurrentNodeLabel,_,NodeAction),
     
     getRootDistance(CurrentNodeIndex,TreeNodes,RootDistance),
     %write(RootDistance).%,
     getPadding(RootDistance,Padding),
 
-    write(Padding),write(CurrentNodeLabel),nl,
+    write(Padding),write(CurrentNodeLabel),write(' - '),write(NodeAction),nl,
     printSortedTreeAux(MoreNodes,TreeNodes).
 
 printSortedTree(Tree):-!,

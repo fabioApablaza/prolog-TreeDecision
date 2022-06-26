@@ -17,7 +17,7 @@ distribution(Records,RecordDistribution):-
     classCount(Classes,Records,RecordDistribution).
 
 % All records are from the same class
-induct(Records,Parent,_,_,AcNodes,[treeNode(leaf,[Class],Parent)|AcNodes]):-
+induct(Records,Parent,_,_,AcNodes,[treeNode(leaf,[Class],Parent,return(Class))|AcNodes]):-
     distribution(Records,[Class]).
 
 
@@ -84,25 +84,38 @@ chooseAttribute(Records,Classes,Attributes,BestAttribute,BestAttributeValues,Oth
 
 
 %induct(Records,Parent,_,_,AcNodes,[treeNode(leaf,[Class],Parent)|AcNodes]):-
+getNewNodeAction(NewId,Partition,PartitionClassesLen,NodeAction):-
+    ((PartitionClassesLen = 1) ->(
+            Partition=[processedRecord(_,Class,_)| _],
+            length(Partition,PartitionLen),
+            NodeAction = return(type=Class/PartitionLen)
+        ));
+    NodeAction = checkSons.
+getNewNodeAction(NewId,_,_,_):-write('Failing'),write(NewId),nl,false.
+
 particionate([],_,_,_,_,Tree,Tree):-!.
 particionate([AttributeValue|MoreAttributeValues],Attribute, Records,Parent,OtherAttributes,AcNodes,Tree):-
     ((Parent=root -> ParentId=root);(
-        Parent=treeNode(ParentId,_,_)
+        Parent=treeNode(ParentId,_,_,_)
     )),
 
     %writeln('Particionating'),
     getPartitionByAttributeValue(Records, Attribute=AttributeValue,Partition),
     length(AcNodes,NewId),
-    NewNode=treeNode(NewId,Attribute=AttributeValue,ParentId),
+    NewNode=treeNode(NewId,Attribute=AttributeValue,ParentId,NodeAction),
     append(AcNodes,[NewNode],NewAccNodes),
-    
+
     %Target Classes in this partition
     setof(Class,(Index,Record,Records,Attributes)^(
         member(Record,Partition),
         Record=processedRecord(Index,Class,Attributes)),
     Classes),
-    
     length(Classes,PartitionClassesLen),
+    getNewNodeAction(NewId,Partition,PartitionClassesLen,NodeAction),
+    
+    
+    write(NewNode),nl,
+    
     (((PartitionClassesLen =\= 1) -> (
         induct(Partition,NewNode,Classes,OtherAttributes,NewAccNodes,PreTree),
         particionate(MoreAttributeValues,Attribute,Records,Parent,OtherAttributes,PreTree,Tree)
@@ -112,7 +125,7 @@ particionate([AttributeValue|MoreAttributeValues],Attribute, Records,Parent,Othe
 induct(Records, Parent,Classes,Attributes,AcNodes,Tree):-
     %write('Inducting'),nl,
     chooseAttribute(Records,Classes,Attributes,BestAttribute,BestAttributeValues,OtherAttributes),
-    %write('Best attribute: '),write(BestAttribute),write(' with values: '),write(BestAttributeValues),nl,
+    %write('Best attribute: '),write(BestAttribute),write(' with values: '),write(BestAttributeValues),nl.%,
     particionate(BestAttributeValues,BestAttribute,Records,Parent,OtherAttributes,AcNodes,Tree).
 
 id3(Records,ProccesedAttributes,Tree):-
@@ -124,7 +137,7 @@ id3(Records,ProccesedAttributes,Tree):-
     
     induct(Records,root,Classes,ProccesedAttributes,[],Tree),
     printSortedTree(Tree).
-    %write(Tree),nl.
+    write(Tree),nl.
 
 
 

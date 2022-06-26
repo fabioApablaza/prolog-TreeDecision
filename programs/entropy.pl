@@ -59,7 +59,7 @@ showTerms(Attribute,AttributeValue,PartitionLen,EntropyNumeratorTerm,Class):-
     write(' with '), write(PartitionLen),write(' elements'),
     (
         (
-            (EntropyNumeratorTerm=0.0) -> (write(' only of class '),write(Class), write(': '),write(EntropyNumeratorTerm));
+            (EntropyNumeratorTerm=0.0) -> (write(' only of class '),write(Class), write(': '),write(EntropyNumeratorTerm))
         );
         (write(': '),write(EntropyNumeratorTerm))
     ),nl.
