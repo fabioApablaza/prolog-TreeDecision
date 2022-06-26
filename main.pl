@@ -4,9 +4,13 @@
 :- use_module("./programs/dataProcessing.pl",[dropColumn/5,processAndAssertRecords/5,cutElementFromListByIndex/3]). 
 
 
+discretizeColumn().
+
+
 % We load the data
 processZooData(Domains,ProccesedAttributes,ProccesedRecords,Tree):-
-    loadData('./DataSets/zooDataset.csv', Attributes, Records),
+    loadData('./DataSets/trainingZoo.csv', Attributes, Records),
+    %loadData('./DataSets/zooDataset.csv', Attributes, Records),
     dropColumn(Records,Attributes,0,CuttedRecords,CuttedAttributes),
     domainOfAttributes(CuttedAttributes,CuttedRecords, Domains),
     length(CuttedAttributes,CuttedAttributesLen),

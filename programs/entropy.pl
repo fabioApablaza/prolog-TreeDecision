@@ -1,4 +1,4 @@
-:- module(entropy, [entropy/3,conditionalEntropy/3]).
+:- module(entropy, [entropy/3,conditionalEntropy/4]).
 
 entropy([],_,_,0):-!.
 entropy([Class | Classes], Records, RecordsNum, Sum):-
@@ -32,8 +32,13 @@ calculateConditionalEntropyTermAux([Class|Classes], Partition,PartitionLen,Recor
 
     %Conditional probability
     Probability is ClassOccurrencies/PartitionLen,
-    calculateConditionalEntropyTermAux(Classes,Partition,PartitionLen,RecordsLen,SumAux), 
-    EntropyNumeratorTerm is SumAux - (ClassOccurrencies * log(Probability)/log(2))/RecordsLen.
+    calculateConditionalEntropyTermAux(Classes,Partition,PartitionLen,RecordsLen,SumAux),
+
+    (((Probability=1)->(
+        EntropyNumeratorTerm is SumAux - ClassOccurrencies
+        )); 
+    EntropyNumeratorTerm is SumAux - (ClassOccurrencies * log(Probability)/log(2))/RecordsLen).
+
 %
 
 
@@ -42,17 +47,32 @@ calculateConditionalEntropyTerm(Partition,PartitionLen,RecordsLen,EntropyNumerat
     setof(Class,(Index,Record,Partition,Attributes)^(
         member(Record,Partition),
         Record=processedRecord(Index,Class,Attributes)),
-    Classes),!,    
+    Classes),!,
+    %length(Classes,ClassesLen), write('Classes len: '),writeln(ClassesLen),
     %Classes depending on partition, Partition element, Partition len, result
-    
     calculateConditionalEntropyTermAux(Classes, Partition,PartitionLen,RecordsLen,EntropyNumeratorTerm).
+    
 %
 
-conditionalEntropy([],_,0):-!.
-conditionalEntropy([Partition | MorePartitions],RecordsLen,ConditionalEntropy):-
+showTerms(Attribute,AttributeValue,PartitionLen,EntropyNumeratorTerm,Class):-
+    write('  Entropy term for partion '),write(Attribute=AttributeValue),
+    write(' with '), write(PartitionLen),write(' elements'),
+    (
+        (
+            (EntropyNumeratorTerm=0.0) -> (write(' only of class '),write(Class), write(': '),write(EntropyNumeratorTerm));
+        );
+        (write(': '),write(EntropyNumeratorTerm))
+    ),nl.
+
+conditionalEntropy([],_,_,0):-!.
+conditionalEntropy([Partition | MorePartitions],Attribute,RecordsLen,ConditionalEntropy):-
     length(Partition, PartitionLen),
 
     calculateConditionalEntropyTerm(Partition,PartitionLen,RecordsLen,EntropyNumeratorTerm),
-    conditionalEntropy(MorePartitions,RecordsLen,AcConditionalEntropy),
+    conditionalEntropy(MorePartitions,Attribute,RecordsLen,AcConditionalEntropy),
     %ConditionalEntropy is EntropyNumeratorTerm.
-    ConditionalEntropy is AcConditionalEntropy+ EntropyNumeratorTerm.
+    ConditionalEntropy is AcConditionalEntropy+ EntropyNumeratorTerm,
+
+    Partition=[processedRecord(_,Class,RecordAttributes)|_],
+    member(Attribute=AttributeValue,RecordAttributes).%,
+    %showTerms(Attribute,AttributeValue,PartitionLen,EntropyNumeratorTerm,Class).

@@ -1,5 +1,6 @@
 :- module(id3, [id3/3]).
-:- use_module("./programs/entropy.pl",[entropy/3,conditionalEntropy/3]).
+:- use_module("./programs/entropy.pl",[entropy/3,conditionalEntropy/4]).
+:- use_module("./programs/tree.pl",[printSortedTree/1]).
 
 classCount([Class | MoreClasses], Records, [Class/ClassOccurencies| MoreAccounts]):-
     %Extract record with the Class we are looking for
@@ -41,52 +42,78 @@ getPartitionsByAttribute([AttributeValue|MoreAttributesValues],Records,Attribute
     getPartitionByAttributeValue(Records,Attribute=AttributeValue,Partition),
     getPartitionsByAttribute(MoreAttributesValues,Records,Attribute,MorePartitions).
 
-getMaxInformationGain([X],X):-!.
-getMaxInformationGain([Value/InformationGain | MoreInformationGains],MaxValue/MaxGain):
-    getMaxInformationGain(MoreInformationGains, AuxMaxValue/AuxMaxGain),
-    (
-        InformationGain>AuxMaxGain,MaxValue/MaxGain =Value/InformationGain;
-        MaxValue/MaxGain = AuxMaxValue/AuxMaxGain
-    ).
+getMaxInformationGain([],(strange-[strange])/0.0). % -write('Case base'),nl.
+getMaxInformationGain([(Attribute-Values)/InformationGain | MoreInformationGains],(BestAttribute-BestAttributeValues)/BestAttrbiuteInformationGain):-
+    %write('getMaxInformationGain '),write(Attribute),nl,
+    getMaxInformationGain(MoreInformationGains, (AuxBestAttribute-AuxBestAttributeValues)/AuxBestAttributeInformationGain),
+    (((InformationGain>AuxBestAttributeInformationGain)->(BestAttribute=Attribute, BestAttributeValues=Values,BestAttrbiuteInformationGain=InformationGain));
+        (BestAttribute=AuxBestAttribute, BestAttributeValues=AuxBestAttributeValues,BestAttrbiuteInformationGain=AuxBestAttributeInformationGain)).
+%
 
-eliminateElementFromList(X,[X|T], T):-!.
-eliminateElementFromList(X,[Y|T], [Y|Z]):- eliminateElementFromList(X,T,Z).
-
-
-chooseAttribute(Records,Classes,Attributes,Attribute,Values,OtherAttributes):-
-    writeln('Attributes: '),writeln(Attributes),nl,
+chooseAttribute(Records,Classes,Attributes,BestAttribute,BestAttributeValues,OtherAttributes):-
+    
     length(Records, RecordsLen),
     entropy(Records,RecordsLen,Entropy),
     findall((Attribute-AttributeValues)/InformationGain,(
         member(Attribute, Attributes),
+        
         getAttributeValues(Records,Attribute,AttributeValues),
+        
         getPartitionsByAttribute(AttributeValues,Records,Attribute,Partitions),
-        conditionalEntropy(Partitions,RecordsLen,ConditionedEntropy),
-        InformationGain is Entropy-conditionedEntropy
-    ),InformationGains),
-    writeln('Information gains: '),writeln(InformationGains),nl.
-    %getMaxInformationGain(InformationGains,(Attribute/Values)/_),
-    %eliminateElementFromList(Attribute,Attributes,OtherAttributes).
+        length(Partitions, PartitionsLen),
+        %nl,write(Attribute),nl,
+        %write(Attribute),write(' number of partitions: '),write(PartitionsLen),nl,
+        conditionalEntropy(Partitions,Attribute,RecordsLen,ConditionalEntropy),
+        InformationGain is Entropy-ConditionalEntropy%,
+        
+        
+        %write('Analizing attribute '),write(Attribute),nl,
+        %write(Attribute),write(' conditional entropy: '),write(ConditionalEntropy),nl,
+        %write(Attribute),write(' values: '),write(AttributeValues),nl
+        %write(Attribute),write(' information gain: '),write(InformationGain),nl,nl
+
+    ),InformationGains),!,
+    getMaxInformationGain(InformationGains,(BestAttribute-BestAttributeValues)/BestAttributeInformationGain),
+    % write('Max information gainer: '),write(BestAttribute),write('/'),write(BestAttributeValues),nl,
+    % write(BestAttribute),write(' information gain: '),write(BestAttributeInformationGain),nl.
+    % write('Attributes: '),writeln(Attributes),nl,
+    % write('Best Attributes: '),write(BestAttribute),nl,
+    delete(Attributes,BestAttribute,OtherAttributes).%,
+    % write('Other Attributes: '),writeln(OtherAttributes),nl.
+
 
 
 %induct(Records,Parent,_,_,AcNodes,[treeNode(leaf,[Class],Parent)|AcNodes]):-
 particionate([],_,_,_,_,Tree,Tree):-!.
 particionate([AttributeValue|MoreAttributeValues],Attribute, Records,Parent,OtherAttributes,AcNodes,Tree):-
+    ((Parent=root -> ParentId=root);(
+        Parent=treeNode(ParentId,_,_)
+    )),
+
+    %writeln('Particionating'),
     getPartitionByAttributeValue(Records, Attribute=AttributeValue,Partition),
     length(AcNodes,NewId),
-    NewNode=treeNode(NewId,Attribute=AttributeValue,Parent),
-    NewAccNodes=[NewNode|AcNodes],
+    NewNode=treeNode(NewId,Attribute=AttributeValue,ParentId),
+    append(AcNodes,[NewNode],NewAccNodes),
     
-    %To correct
-    induct(Partition,NewNode,[],OtherAttributes,NewAccNodes,PreTree),!,
-    particionate(MoreAttributeValues,Attribute,Records,Parent,OtherAttributes,PreTree,Tree).
+    %Target Classes in this partition
+    setof(Class,(Index,Record,Records,Attributes)^(
+        member(Record,Partition),
+        Record=processedRecord(Index,Class,Attributes)),
+    Classes),
+    
+    length(Classes,PartitionClassesLen),
+    (((PartitionClassesLen =\= 1) -> (
+        induct(Partition,NewNode,Classes,OtherAttributes,NewAccNodes,PreTree),
+        particionate(MoreAttributeValues,Attribute,Records,Parent,OtherAttributes,PreTree,Tree)
+    ));particionate(MoreAttributeValues,Attribute,Records,Parent,OtherAttributes,NewAccNodes,Tree)).
 
 % We must choose which attribute is more relevant to clasificate the given records
 induct(Records, Parent,Classes,Attributes,AcNodes,Tree):-
-    write('Inducting'),nl,
-    chooseAttribute(Records,Classes,Attributes,BestAttribute,BestAttributeValues,OtherAttributes),!.%,
-    %particionate(BestAttributeValues,BestAttribute,Records,Parent,OtherAttributes,AcNodes,Tree).
-
+    %write('Inducting'),nl,
+    chooseAttribute(Records,Classes,Attributes,BestAttribute,BestAttributeValues,OtherAttributes),
+    %write('Best attribute: '),write(BestAttribute),write(' with values: '),write(BestAttributeValues),nl,
+    particionate(BestAttributeValues,BestAttribute,Records,Parent,OtherAttributes,AcNodes,Tree).
 
 id3(Records,ProccesedAttributes,Tree):-
     % We get unique values of classes
@@ -95,22 +122,9 @@ id3(Records,ProccesedAttributes,Tree):-
         Record=processedRecord(Index,Class,Attributes)),
     Classes),
     
-
-    Tree=true,
-    ProccesedAttributes=[Attribute | _],
-    getAttributeValues(Records, Attribute,AttributeValues),
-
-    length(Records,RecordsLen),
-    getPartitionsByAttribute(AttributeValues,Records,Attribute,Partitions),
-    conditionalEntropy(Partitions,RecordsLen,ConditionalEntropy),
-    entropy(Records,RecordsLen,Entropy),
-    InformationGain is Entropy-ConditionalEntropy,
-    
-    write('Entropy: '),write(Entropy),nl,
-    write('Conditional Entropy: '),write(ConditionalEntropy),nl,
-    write('Information gain: '),write(InformationGain),nl.
-    %induct(Records,root,Classes,ProccesedAttributes,[],Tree).
-
+    induct(Records,root,Classes,ProccesedAttributes,[],Tree),
+    printSortedTree(Tree).
+    %write(Tree),nl.
 
 
 
@@ -119,3 +133,5 @@ id3(Records,ProccesedAttributes,Tree):-
 
 %ID3 continous values https://www.youtube.com/watch?v=2vIvM4zmyf4
 % https://www.naun.org/main/NAUN/mcs/17-213.pdf
+% main(_,_,_,_)
+% processZooData(_,_,_,_).
