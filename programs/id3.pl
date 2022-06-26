@@ -1,6 +1,6 @@
 :- module(id3, [id3/3]).
 :- use_module("./programs/entropy.pl",[entropy/3,conditionalEntropy/4]).
-:- use_module("./programs/tree.pl",[printSortedTree/1]).
+:- use_module("./programs/tree.pl",[printSortedTree/1,saveTree/2]).
 
 classCount([Class | MoreClasses], Records, [Class/ClassOccurencies| MoreAccounts]):-
     %Extract record with the Class we are looking for
@@ -136,8 +136,10 @@ id3(Records,ProccesedAttributes,Tree):-
     Classes),
     
     induct(Records,root,Classes,ProccesedAttributes,[],Tree),
-    printSortedTree(Tree).
-    write(Tree),nl.
+    printSortedTree(Tree),
+    saveTree(Tree,'myTree.pl'),
+    Records=[ProcessedRecord|_],
+    writeln(ProcessedRecord).
 
 
 

@@ -1,4 +1,4 @@
-:- module(printSortedTree, [printSortedTree/1]).
+:- module(printSortedTree, [printSortedTree/1,saveTree/2]).
 
 %Original https://www.rosettacode.org/wiki/Repeat_a_string#Prolog
 repeat(Str,1,Str).
@@ -35,3 +35,18 @@ printSortedTreeAux([CurrentNode|MoreNodes],TreeNodes):-
 printSortedTree(Tree):-!,
     write('root'),nl,!,
     printSortedTreeAux(Tree,Tree).
+
+
+
+saveTreeAux(_OutStream,[]):-!.
+saveTreeAux(OutStream,[TreeNode|MoreNodes]):-
+    write(OutStream,TreeNode),write(OutStream,'.'),nl(OutStream),
+    saveTreeAux(OutStream,MoreNodes).
+saveTree(Tree,FileName):-
+    % To read the file we must use consult(FilePath/FileName) and
+    % then use findall(treeNode(NodeIndex,Label,Parent,Action),treeNode(NodeIndex,Label,Parent,Action),Tree)
+    open(FileName,write,OutStream),
+    findall(TreeNode,(
+        member(TreeNode,Tree),
+        write(OutStream,TreeNode),write(OutStream,'.'),nl(OutStream)
+        ),Tree),close(OutStream).
